@@ -10,6 +10,8 @@ them are `modes/SHOWCASE.md`.
 real person), the neutral pack, sample words. Placeholders in the effects (icons, headshots, screenshots, clips)
 are labelled as placeholders; the creator's real material replaces them.
 
+![All seventeen effects](../docs/img/effects.jpg)
+
 | folder | layer | what it does | reach for it when the line says | supply |
 |---|---|---|---|---|
 | `kinetic-hook` (+ `kinetic-hook-front`) | behind + top | the hook: line one in the display face readable on frame 0, the creator's dark ground cuts in as line two stamps letter by letter (the head breaks it), sans lines push through masks on their words over the video's own running timecode, the last tracks in from wide; optional payoff slams in; the front copy carries line one over the speaker for the opening frames, split light/dark by per-frame masks | the first line, a claim about the video itself | the words and the cue word each beat lands on (fx.js constants); `kinetic-hook-front/mkmask.py <project>` rebuilds the masks from clean.mp4; end the front window on the frame the ground cuts in |

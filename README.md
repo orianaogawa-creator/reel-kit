@@ -6,6 +6,10 @@ storyboard to comment on before anything renders.
 
 Works with Claude Code and Codex. Runs on your computer, on your footage. Free and open source.
 
+![The same six moments of one edit in three style packs: default, bold and soft](docs/img/styles.jpg)
+<sub>One edit, three style packs. Same cut, same effects, same timing; the look is the pack's. Every image in this
+README is drawn on a stand-in figure.</sub>
+
 ## What it makes
 - A clean edit of one take: dead air out, the last good take of every line, J-cuts on every join, two framings
   from one camera, lip sync checked before and after the render.
@@ -28,6 +32,16 @@ Works with Claude Code and Codex. Runs on your computer, on your footage. Free a
 Your style decides how each mode edits for you, not just its colours: the hook shape, how captions move, what the
 camera does, which transitions you use and how a big word lands all come from your brand and your inspiration.
 
+<p align="center"><img src="docs/img/modes.jpg" width="620" alt="Hi-fi, lo-fi and showcase frames in the default, bold and soft packs"></p>
+
+## The effects
+Seventeen hand-built motion graphics for showcase videos, each one driven by your style pack: kinetic type, a word
+stamped behind your head, giant captions, a typing prompt bar, comment threads, a magazine cover, an editing
+timeline built from your own video, a grade that wipes across, a grid of you, a frame that recurses into itself,
+and more. What each one does and when to reach for it: [`fx/LIBRARY.md`](fx/LIBRARY.md).
+
+![All seventeen showcase effects](docs/img/effects.jpg)
+
 ## Your style, not ours
 The first time you run it, the agent builds your style pack:
 1. **Have a brand file?** A brand guide, a DESIGN.md, a PDF or your website. It reads your fonts and colours.
@@ -39,6 +53,8 @@ and a few cards in your look, and asks if it looks like you. Change anything, an
 
 The pack lives in `~/reel-kit/style/`, outside the skill, so updates never touch it. Each video keeps a copy of
 the style it was made with.
+
+<p align="center"><img src="docs/img/board.jpg" width="600" alt="A style board: type, colours with their meanings, and a frame in each mode"></p>
 
 ## Install
 You need a Mac or Linux computer (Windows is untested; WSL should work), plus ffmpeg, Node 18+ and Python 3.10+.
@@ -84,6 +100,8 @@ never inside the skill folder. Run it again any time; it only fixes what's missi
 The storyboard opens as a Claude artifact with inline comments when you use Claude, or as a local page on your
 computer anywhere else (your notes save to a file the agent reads).
 
+<p align="center"><img src="docs/img/storyboard.jpg" width="600" alt="A storyboard: every beat with real frames, the line, what moves, and a note box"></p>
+
 ## Extend it (optional)
 Everything above works out of the box with real footage, real screenshots and the kit's own sound effects. Connect
 any of these to your agent to go further; the skill uses what it finds and skips what it doesn't.
@@ -112,7 +130,8 @@ audio/sfx/            sound effects, synthesized from scratch for this kit (CC0)
 storyboard/           the review page and a local server for hosts without artifacts
 examples/             a reference edit.py for each mode, and three sample style packs
 setup/                setup.py and package.py
-dev/                  the kit's own test bench: a drawn stand-in figure and the effects lab that previews every effect
+dev/                  the kit's own test bench: a drawn stand-in figure, the effects lab, the README images
+docs/img/             the README images (dev/readme_shots.py regenerates them)
 ```
 
 ## Credits and licenses

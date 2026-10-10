@@ -9,7 +9,7 @@ import zipfile
 
 KIT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SKIP_DIRS = {".venv", ".models", ".git", "dist", "dev", "__pycache__", "vendor", "snapshots", "node_modules",
-             "fonts", "board"}                   # fonts and boards are generated per pack by style.py / board.py
+             "fonts", "board", "docs"}           # fonts and boards are generated per pack; docs/ is the README's images
 SKIP_FILES = {".DS_Store"}
 
 
