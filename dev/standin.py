@@ -7,6 +7,7 @@ little. Nothing in it is a person: it is a placeholder, and it looks like one.
   matte <aroll.mp4> <subject.webm> the figure keyed out of a cut of that video -> VP9 + alpha (the cutout)
 """
 import math
+import os
 import subprocess
 import sys
 
@@ -46,6 +47,7 @@ def figure(d, t):
 
 
 def video(out, seconds):
+    os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     base = room()
     n = int(seconds * FPS)
     enc = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
