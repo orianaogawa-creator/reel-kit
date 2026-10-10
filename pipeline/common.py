@@ -50,12 +50,22 @@ def load_edit(project):
     m = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(m)
     m.PROJECT = project
+    m.MODE = pack_mode(project, getattr(m, "STYLE", "hifi"))
+    if not hasattr(m, "J_LEAD") and "j_lead" in m.MODE:
+        m.J_LEAD = m.MODE["j_lead"]
     for k, v in DEFAULTS.items():
         if not hasattr(m, k):
             setattr(m, k, v)
     if m.CAM_ORIGIN is None:
         m.CAM_ORIGIN = (540, 760) if m.CANVAS[0] < m.CANVAS[1] else (m.CANVAS[0] // 2, 400)
     return m
+
+
+def pack_mode(project, mode):
+    """the creator's settings for this mode, from the pack the project was made with (else their current pack)"""
+    import style as ST
+    local = os.path.join(project, "style", "style.json")
+    return dict(ST.load(local if os.path.exists(local) else None).get("modes", {}).get(mode, {}))
 
 
 def wide(E):

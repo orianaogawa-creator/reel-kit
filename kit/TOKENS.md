@@ -1,5 +1,8 @@
 # Style tokens
 
+These are the colour and font tokens. The whole pack, including how each mode edits for the creator, is described in
+`kit/STYLE_PACK.md`.
+
 Everything that makes a video look like a particular creator lives in their style pack
 (`$REEL_KIT_HOME/style/style.json`, default `~/reel-kit/style/`). `pipeline/style.py` turns it into `brand.css`:
 CSS variables plus the pack's fonts. The composition, every card and the storyboard read only these variables. If

@@ -25,6 +25,8 @@ quieter for a dense edit. `sound.sfx: light` in the style pack sits every effect
 | `click` | A crisp, rounded UI click with a faint second tap | a UI click, a text box appears | -16 | 0.12 | 0.002 |
 | `tick` | A light, bright tick, shorter and higher than the click | one tick of a counter or clock (repeat it per tick) | -11 | 0.09 | 0.002 |
 | `clicks-run` | A steady run of mechanical clacks, about 19 per second, first clack slightly accented | a grid flipping, a counter rolling; trim it to the motion | -12 | 2.50 | 0.002 |
+| `key` | One keystroke: a soft click with a little body, and a light release click 70 ms later | a single key, an enter press | -18 | 0.12 | 0.002 |
+| `typing` | 2.5 s of keyboard typing, about 10 keys a second in words, with a heavier space bar between them; no accent | under on-screen typing: place it by its start and trim it to the text with max_len | -11 | 2.50 | 1.228 |
 | `ding` | A clean bell-like ding at 1.76 kHz with a soft octave shimmer and a 1 s ring | a counter lands on its final value | -20 | 1.40 | 0.002 |
 | `shutter` | A two-stage camera shutter: clack, then a lighter clack 60 ms later | a screenshot or photo appears | -14 | 0.20 | 0.002 |
 | `stamp` | A rubber stamp slam: short low thump with a paper slap on top | a stamp, a verdict, an APPROVED lands | -12 | 0.45 | 0.007 |

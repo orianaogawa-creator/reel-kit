@@ -19,7 +19,7 @@ import types
 
 KIT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(KIT, "pipeline"))
-from common import VENDOR, hf  # noqa: E402
+from common import HF, VENDOR, hf  # noqa: E402
 import style as ST  # noqa: E402
 import build as B  # noqa: E402
 from storyboard import theme_css  # noqa: E402
@@ -82,6 +82,29 @@ def snap(d, t, out):
                    check=True)
 
 
+def split_word(S, pack, word, size, top, frame):
+    """the emphatic word with each letter light or ink against the picture under it, the way the showcase effects
+    split type over footage (no outline). Letter widths from the pack's own display font file"""
+    from PIL import Image, ImageFont
+    F = S["fonts"]["display"]
+    name = f"{F['family'].replace(' ', '')}-{'italic' if F.get('italic') else 'normal'}-{F.get('weight', 400)}.ttf"
+    files = sorted(glob.glob(os.path.join(pack, "fonts", F["family"].replace(" ", "") + "-*.ttf")))
+    path = os.path.join(pack, "fonts", name) if os.path.exists(os.path.join(pack, "fonts", name)) else (files[0] if files else None)
+    if not frame or not path:
+        return html.escape(word) if not frame else f'<span style="color:var(--c-light)">{html.escape(word)}</span>'
+    font = ImageFont.truetype(path, size)
+    widths = [font.getlength(ch) - 0.03 * size for ch in word]
+    x = 540 - sum(widths) / 2
+    grey = Image.open(frame).convert("L")
+    out = []
+    for ch, w in zip(word, widths):
+        box = (int(max(0, x)), int(top + size * 0.15), int(min(1080, x + w)), int(top + size * 0.85))
+        light = sum(grey.crop(box).getdata()) / max(1, (box[2] - box[0]) * (box[3] - box[1])) / 255 > 0.55
+        out.append(f'<span style="color:var({"--c-ink" if light else "--c-light"})">{html.escape(ch)}</span>')
+        x += w
+    return "".join(out)
+
+
 def card_title(cid):
     lib = os.path.join(KIT, "cards", "LIBRARY.md")
     if os.path.exists(lib):
@@ -124,7 +147,7 @@ def main():
     if clip:
         clip = os.path.abspath(os.path.expanduser(clip))
         frame_from(clip, os.path.join(work, "frame.jpg"))
-    for d in ("hifi", "lofi"):
+    for d in ("hifi", "lofi", "showcase"):
         os.makedirs(os.path.join(work, d), exist_ok=True)
         if clip:
             shutil.copy(os.path.join(work, "frame.jpg"), os.path.join(work, d))
@@ -132,20 +155,51 @@ def main():
               '<div class="full" style="background:var(--c-dark)"></div>')
     name = S["creator"].get("name") or "Your source"
 
+    M = S.get("modes", {})
+    hook_kind = M.get("hifi", {}).get("hook", "two-line")
+    hook = {"two-line": f'<div class="eb">{html.escape(name)} · 2026</div><div class="h1">This is your hook</div>'
+                        f'<div class="h2">in your style</div>',
+            "one-line": f'<div class="eb">{html.escape(name)} · 2026</div><div class="h2">Your hook, one line</div>',
+            "none": ""}.get(hook_kind, "")
     print("rendering the hi-fi frame ...", flush=True)
     phone(os.path.join(work, "hifi"), pack, f'''{ground}
-<div id="hook"><div class="eb">{html.escape(name)} · 2026</div><div class="h1">This is your hook</div><div class="h2">in your style</div></div>
+<div id="hook">{hook}</div>
 <div class="capw"><div class="cap onfoot" style="opacity:1">Captions look <span class="em">like this</span></div></div>''',
           ["reel.css"], extra)
     snap(os.path.join(work, "hifi"), 0.5, os.path.join(board, "img", "hifi.jpg"))
 
     print("rendering the lo-fi frame ...", flush=True)
     lit = html.escape(C["caption_ink"])
+    rhythm = M.get("lofi", {}).get("captions", "word-by-word")
+    line = {"word-by-word": f'<span style="color:{lit}">each word</span> lights up',
+            "phrase": f'<span style="color:{lit}">the line lands at once</span>',
+            "single": f'<span style="color:{lit}">one</span>'}.get(rhythm, "")
+    box = ('<div class="nb" style="opacity:1"><span class="ln">Your hook, in a text box</span></div>'
+           if M.get("lofi", {}).get("text_boxes", True) else "")
     phone(os.path.join(work, "lofi"), pack, f'''{ground}
-<div class="nb" style="opacity:1"><span class="ln">Your hook, in a text box</span></div>
-<div class="kw"><div class="kc" style="opacity:1"><span style="color:{lit}">each word</span> lights up</div></div>''',
+{box}
+<div class="kw"><div class="kc" style="opacity:1">{line}</div></div>''',
           ["reel.css", "reel-lofi.css"], extra)
     snap(os.path.join(work, "lofi"), 0.5, os.path.join(board, "img", "lofi.jpg"))
+
+    print("rendering the showcase frame ...", flush=True)
+    land = M.get("showcase", {}).get("emphasis_word", "stamp")
+    sd = os.path.join(work, "showcase")
+    os.makedirs(sd, exist_ok=True)
+    cut = ""
+    if clip:
+        shutil.copy(os.path.join(work, "frame.jpg"), sd)
+        if subprocess.run(HF + ["remove-background", "frame.jpg", "-o", "subject.png"], cwd=sd,
+                          capture_output=True).returncode == 0 and os.path.exists(os.path.join(sd, "subject.png")):
+            cut = f'<img class="full" src="subject.png" alt="" style="filter:{html.escape(S["grade"])}" />'   # the speaker in front: the head breaks the word
+    top = 340 if cut else 250
+    word = split_word(S, pack, "NEVER", 250, top, os.path.join(sd, "frame.jpg") if clip else None)
+    phone(sd, pack, f'''{ground}
+<div class="bh" style="top:{top}px;font-size:250px;">{word}</div>
+{cut}
+<div class="kw"><div class="kc" style="opacity:1"><span style="color:{lit}">I never open an editing app</span></div></div>''',
+          ["reel.css", "reel-lofi.css"], extra)
+    snap(os.path.join(work, "showcase"), 0.5, os.path.join(board, "img", "showcase.jpg"))
 
     cards = [c for c in (arg("--cards") or ",".join(DEFAULT_CARDS)).split(",") if c]
     shown = []
@@ -232,11 +286,12 @@ footer {{ padding-top: 32px; font-size: 16px; line-height: 1.55; max-width: 62ch
     <div class="sw">{chips}</div>
   </section>
   <section>
-    <h2>On your footage</h2>
-    <p class="note">The hook and captions, {footage}.</p>
+    <h2>Your three modes</h2>
+    <p class="note">How each mode looks for you, {footage}.</p>
     <div class="grid">
-      <figure><img src="img/hifi.jpg" alt="Hi-fi hook and caption" /><figcaption><b>Hi-fi</b> the produced look: hook, boxed phrases, cards</figcaption></figure>
-      <figure><img src="img/lofi.jpg" alt="Lo-fi text box and caption" /><figcaption><b>Lo-fi</b> the selfie look: text box, word-by-word captions</figcaption></figure>
+      <figure><img src="img/hifi.jpg" alt="Hi-fi hook and caption" /><figcaption><b>Hi-fi</b> produced: {html.escape(hook_kind)} hook, captions in phrases, cards, camera {html.escape(str(M.get("hifi", {}).get("camera", "settle")))}</figcaption></figure>
+      <figure><img src="img/lofi.jpg" alt="Lo-fi text box and caption" /><figcaption><b>Lo-fi</b> selfie: captions {html.escape(rhythm)}{", text boxes" if M.get("lofi", {}).get("text_boxes", True) else ""}</figcaption></figure>
+      <figure><img src="img/showcase.jpg" alt="Showcase emphatic word" /><figcaption><b>Showcase</b> show-off: a big word lands with a {html.escape(land)}; transitions {html.escape(", ".join(M.get("showcase", {}).get("transitions", [])))}</figcaption></figure>
     </div>
   </section>
 {cards_section}  <footer>Anything here can change: fonts, colours, captions, pace. Say what feels off and the board comes back with it fixed.</footer>

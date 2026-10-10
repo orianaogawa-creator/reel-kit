@@ -538,6 +538,56 @@ def switch_off():
     return (stutter + stereo(0.5 * fall + 0.4 * norm(pop_))) * release(t, D - 0.1, 0.1)
 
 
+def keystroke(rs, space=False, body=0.25, release_at=None):
+    """one key on a modern keyboard (mono, 0.16 s): the finger's soft tap, the bottom-out clack with a little body
+    2.5 ms later, and a lighter release click as the key comes back up. space=True is the space bar: lower and
+    heavier, with a short stabilizer rattle."""
+    t = tvec(0.16)
+    tt = np.maximum(t - LEAD, 0)
+    d = rs.uniform(0.93, 1.07)                               # every key resonates a little differently
+    if space:
+        clack = [(1350 * d, .004, 1.0), (2300 * d, .003, .5), (5200 * d, .004, .12), (210 * d, .012, .15)]
+        rel_at, rel_g = rs.uniform(0.07, 0.11), 0.4
+    else:
+        clack = [(2400 * d, .0035, 1.0), (3900 * d, .002, .7), (5600 * d, .0012, .3), (360 * d, .007, body)]
+        rel_at, rel_g = rs.uniform(0.045, 0.085), 0.3
+    hit = np.maximum(tt - 0.0025, 0)
+    y = 0.35 * norm(burst(rs, tt, 0.0006, 1000, 6000)) + norm(modes(hit, clack, rs, 0.0003))
+    y = y + 0.6 * norm(burst(rs, hit, 0.0007, 2000, 9000))
+    if space:
+        y = y + 0.3 * norm(burst(rs, np.maximum(hit - 0.004, 0), 0.001, 1500, 7000))
+    rt = np.maximum(tt - (release_at or rel_at), 0)
+    rel = norm(modes(rt, [(3200 * d, .0015, 1.0), (4800 * d, .001, .5)], rs, 0.0003))
+    return y + rel_g * (rel + 0.6 * norm(burst(rs, rt, 0.0004, 2500, 10000)))
+
+
+def key():
+    rs = np.random.default_rng(119)
+    return room(stereo(keystroke(rs, body=0.4, release_at=0.07)[:ns(0.12)]), rs, rt=0.15, lp=5000, pre=0.003, mix=-18)
+
+
+def typing():
+    rs = np.random.default_rng(120)
+    D = 2.5
+    x = np.zeros((2, ns(D)))
+    at = LEAD
+    while at < D - 0.17:
+        for _ in range(rs.choice([2, 3, 3, 4, 4, 4, 5, 5, 6, 7, 8])):         # a word
+            if at >= D - 0.17:
+                break
+            put(x, pan(gain(rs.uniform(-4, 0)) * keystroke(rs), rs.uniform(-0.3, 0.3)), at)
+            fast = rs.uniform() < 0.15                                          # a quick letter pair
+            at += rs.uniform(0.035, 0.055) if fast else np.clip(np.exp(rs.normal(np.log(0.085), 0.28)), 0.045, 0.16)
+        if at >= D - 0.17:
+            break
+        at += 0.02                                                              # a beat before the space
+        put(x, pan(gain(rs.uniform(0.5, 2.0)) * keystroke(rs, space=True), rs.uniform(-0.05, 0.05)), at)
+        at += np.clip(np.exp(rs.normal(np.log(0.12), 0.25)), 0.08, 0.2)
+        if rs.uniform() < 0.2:                                                  # now and then, a short pause
+            at += rs.uniform(0.05, 0.12)
+    return room(x, rs, rt=0.2, lp=5000, pre=0.003, mix=-16)                     # a desk in a room, not a vacuum
+
+
 # name, generator, sounds like, an editor uses it when
 SOUNDS = [
     ("whoosh", whoosh,
@@ -564,6 +614,12 @@ SOUNDS = [
     ("clicks-run", clicks_run,
      "A steady run of mechanical clacks, about 19 per second, first clack slightly accented",
      "a grid flipping, a counter rolling; trim it to the motion"),
+    ("key", key,
+     "One keystroke: a soft click with a little body, and a light release click 70 ms later",
+     "a single key, an enter press"),
+    ("typing", typing,
+     "2.5 s of keyboard typing, about 10 keys a second in words, with a heavier space bar between them; no accent",
+     "under on-screen typing: place it by its start and trim it to the text with max_len"),
     ("ding", ding,
      "A clean bell-like ding at 1.76 kHz with a soft octave shimmer and a 1 s ring",
      "a counter lands on its final value"),
@@ -628,7 +684,8 @@ def measure(path):
 # starting gains (dB), from a finished hi-fi edit mixed to -14 LUFS (old levels moved by measured loudness offsets)
 START_DB = {"whoosh": -14, "whoosh-soft": -19, "whoosh-deep": -16, "whoosh-long": -12, "pop": -19, "click": -16,
             "tick": -11, "clicks-run": -12, "ding": -20, "shutter": -14, "stamp": -12, "impact-low": -14,
-            "boom-low": -17, "riser": -14, "riser-long": -12, "drum-hit": -12, "scratch": -8, "switch-off": -12}
+            "boom-low": -17, "riser": -14, "riser-long": -12, "drum-hit": -12, "scratch": -8, "switch-off": -12,
+            "key": -18, "typing": -11}
 
 
 def write_md(rows):

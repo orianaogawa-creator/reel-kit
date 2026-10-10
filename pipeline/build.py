@@ -122,7 +122,11 @@ def captions(E):
 
 def karaoke_lines(E):
     """lofi: words.json grouped into one-line phrases; break on punctuation, pauses, max words or characters"""
-    K = {**dict(max_words=4, max_chars=24, gap=0.35, huge=[], huge_words=2, huge_chars=12), **getattr(E, "KARAOKE", {})}
+    M = getattr(E, "MODE", {})
+    pack = {k: M[k] for k in ("max_words", "max_chars") if k in M}
+    if M.get("captions") == "single":                                  # one word at a time
+        pack.update(max_words=1)
+    K = {**dict(max_words=4, max_chars=24, gap=0.35, huge=[], huge_words=2, huge_chars=12), **pack, **getattr(E, "KARAOKE", {})}
     big = lambda w: any(a <= w["start"] < b for a, b in K["huge"])     # noqa: E731  ("captions come in huge")
     words = []
     for w in json.load(open(os.path.join(E.PROJECT, "words.json"))):
@@ -159,7 +163,11 @@ def karaoke(E):
         cls = "kc huge" if any(a <= t0 < b for a, b in huge) else "kc"
         html.append(f'<div class="kw"><div id="kc{i}" class="{cls}">{spans}</div></div>')
         js.append(f"on('#kc{i}', {t0:.3f}); off('#kc{i}', {min(t1, E.TOTAL):.3f});")
-        js.append(" ".join(f"tl.set('#kc{i}_{j}', {{ color: '{E.S['colors']['caption_ink']}' }}, q({w['start']:.3f}));" for j, w in enumerate(ln)))
+        lit = E.S['colors']['caption_ink']
+        if getattr(E, "MODE", {}).get("captions") == "phrase":          # the whole line lands lit at once
+            js.append(f"gsap.set('#kc{i} .k', {{ color: '{lit}' }});")
+        else:                                                          # every word lights as it is spoken
+            js.append(" ".join(f"tl.set('#kc{i}_{j}', {{ color: '{lit}' }}, q({w['start']:.3f}));" for j, w in enumerate(ln)))
     return html, js
 
 
@@ -212,7 +220,8 @@ def fx(E):
       cam     on the camera above the cutout (zooms carry it): extra footage layers, wipes, grids, recursion
       top     above the speaker and the overlays, under the captions
       over    above everything (captions too): letterbox bars, full-frame transitions
-    In fx.html, {{T0}}..{{T9}} become unique data-track-index values for <video> elements."""
+    In fx.html and fx.js, {{ID}} becomes the entry's id (so a library effect is copied without renaming) and
+    {{T0}}..{{T9}} become unique data-track-index values for <video> elements."""
     out, js = {k: [] for k in FX_LAYERS}, []
     only = [x for x in os.environ.get("FX_ONLY", "").split(",") if x]       # fxsandbox.py: build just these
     for k, F in enumerate(getattr(E, "FX", [])):
@@ -226,14 +235,31 @@ def fx(E):
             out[layer].append(f'<div id="{fid}" class="layer fx ph dark">{fid} pending</div>')
             js.append(f"gsap.set('#{fid}', {{opacity: 0}}); on('#{fid}', {F['at']:.3f}); off('#{fid}', {T(E, F['end']):.3f});")
             continue
-        markup = open(os.path.join(d, "fx.html"), encoding="utf-8").read()
+        markup = fx_times(open(os.path.join(d, "fx.html"), encoding="utf-8").read().replace("{{ID}}", fid),
+                          F["at"], T(E, F["end"]))
         for i in range(10):
             markup = markup.replace("{{T%d}}" % i, str(300 + 10 * k + i))
         out[layer].append(f'<div id="{fid}" class="layer fx" data-layout-allow-occlusion data-layout-allow-overlap>{markup}</div>')
         js.append(f"gsap.set('#{fid}', {{opacity: 0}}); on('#{fid}', {F['at']:.3f}); off('#{fid}', {T(E, F['end']):.3f});")
-        body = open(os.path.join(d, "fx.js"), encoding="utf-8").read() if os.path.exists(os.path.join(d, "fx.js")) else ""
+        body = open(os.path.join(d, "fx.js"), encoding="utf-8").read().replace("{{ID}}", fid) if os.path.exists(os.path.join(d, "fx.js")) else ""
         js.append(f"(function (A, B) {{\n{body}\n}})({F['at']:.3f}, {T(E, F['end']):.3f});")
     return out, js
+
+
+def fx_times(markup, A, B):
+    """media timing in an effect's static HTML, relative to where the effect sits, so a copied effect times itself:
+    {{START}} / {{START+0.77}}  data-start for a clip that starts at A (+0.77), frame-snapped (clip_start)
+    {{SYNC}} / {{SYNC+0.77}}    data-media-start for a copy of clean.mp4 starting there: the same frame as the
+                                main picture (lips in sync)
+    {{DUR}} / {{DUR-0.133}}     the effect's length (less 0.133 s, for a clip that starts late), frames / 30"""
+    import re
+
+    def at(m):
+        t = A + (float(m.group(3)) * (1 if m.group(2) == "+" else -1) if m.group(3) else 0.0)
+        return f"{clip_start(t):.4f}" if m.group(1) == "START" else f"{q(t) + 0.001:.4f}"
+    markup = re.sub(r"\{\{(START|SYNC)(?:([+-])([0-9.]+))?\}\}", at, markup)
+    return re.sub(r"\{\{DUR(?:-([0-9.]+))?\}\}",
+                  lambda m: f"{round((B - A - float(m.group(1) or 0)) * 30) / 30:.4f}", markup)
 
 
 def sync_fx(E, project, pub):
@@ -247,7 +273,7 @@ def sync_fx(E, project, pub):
         os.makedirs(dst, exist_ok=True)
         for f in os.listdir(src):
             a = os.path.join(src, f)
-            if os.path.isfile(a) and f not in ("fx.html", "fx.js") and not f.endswith((".md", ".py")):
+            if os.path.isfile(a) and f not in ("fx.html", "fx.js", "preview.jpg") and not f.endswith((".md", ".py")):
                 if not os.path.exists(os.path.join(dst, f)) or os.path.getmtime(a) > os.path.getmtime(os.path.join(dst, f)):
                     shutil.copy(a, os.path.join(dst, f))
 
@@ -282,10 +308,16 @@ def hook(E):
     H = E.HOOK
     if not H:
         return "", [], []
-    eb = " · ".join(f'<span class="hw">{p}</span>' for p in H["eyebrow"].split(" · "))
-    top = (f'<div id="hook" data-layout-allow-overlap><div class="eb">{eb}</div>'
-           f'<div class="h1" data-layout-allow-overlap><span class="hw" data-layout-allow-overlap>{H["h1"]}</span></div>'
-           f'<div class="h2" data-layout-allow-overlap><span class="hw" data-layout-allow-overlap>{H["h2"]}</span></div></div>')
+    # every part is optional: the creator's modes.hifi.hook decides the shape (two-line: eyebrow + h1 + h2;
+    # one-line: h2 alone, the display line; none: no HOOK at all, the first caption carries it)
+    parts = []
+    if H.get("eyebrow"):
+        eb = " · ".join(f'<span class="hw">{p}</span>' for p in H["eyebrow"].split(" · "))
+        parts.append(f'<div class="eb">{eb}</div>')
+    for k in ("h1", "h2"):
+        if H.get(k):
+            parts.append(f'<div class="{k}" data-layout-allow-overlap><span class="hw" data-layout-allow-overlap>{H[k]}</span></div>')
+    top = f'<div id="hook" data-layout-allow-overlap>{"".join(parts)}</div>'
     behind, js = [], ["gsap.set('#hook .hw', { opacity: 1 });",
                       "tl.fromTo('#hook', { scale: 1.035 }, { scale: 1, duration: 0.5, ease: 'power3.out' }, 0);",
                       f"off('#hook', {H['off']:.3f});"]
@@ -475,6 +507,8 @@ def settle_times(E, TL):
     C = E.CAMERA
     if "settles" in C:
         return C["settles"]
+    if getattr(E, "MODE", {}).get("camera", "settle") != "settle":      # the creator's camera: "zooms" or "still"
+        return []
     starts = [p[0] for p in C.get("punch", [])] + [p[0] for p in C.get("pushes", [])]
     card_ends = [c[3] for c in E.CARDS if visible(E, c[3])]
     changes = [t for t in TL["picture_cuts"] + TL["reframes"] if visible(E, t)]
@@ -553,7 +587,7 @@ LOFI_HIDE = "gsap.set(['.kc', '.nb', 'img.ov', '.ls', 'img.bd'], { opacity: 0 })
 
 def build(E, TL, safe=False, stills=False):
     pub = os.path.join(E.PROJECT, "public")
-    lofi = getattr(E, "STYLE", "hifi") == "lofi"
+    lofi = getattr(E, "STYLE", "hifi") in ("lofi", "showcase")      # showcase = the lo-fi type system + edit.FX
     cap_html, cap_js = karaoke(E) if lofi else captions(E)
     box_html, box_js = boxes(E)
     ov_html, ov_js = overlays(E)
@@ -583,10 +617,33 @@ def build(E, TL, safe=False, stills=False):
     if lofi:
         css += "\n" + open(os.path.join(KIT, "kit", "reel-lofi.css")).read()
     css += "\n" + pack_css(E)
+    words_path = os.path.join(E.PROJECT, "words.json")
+    words = [[w["start"], w["end"], w["text"]] for w in json.load(open(words_path))] if os.path.exists(words_path) else []
+    cuts = [round(t, 4) for t in TL.get("picture_cuts", [])]
+    fxs = [dict(id=F["id"], layer=F.get("layer", "top"), at=round(F["at"], 4), end=round(T(E, F["end"]), 4))
+           for F in getattr(E, "FX", [])]
     js = f"""
   var FPS = 30, TOTAL = {E.TOTAL:.4f};
   var tl = gsap.timeline({{ paused: true }});
   function q(t) {{ return Math.max(0, Math.round(t * FPS) / FPS - 0.002); }}   // land every event ON its frame
+  // for effects (edit.FX): the picture cuts and the words on the output timeline, and the time of a word
+  var CUTS = {json.dumps(cuts)};
+  var FXS = {json.dumps(fxs)};                         // every effect's window: {{id, layer, at, end}}
+  var LOOKS = {json.dumps(LOOKS)};                     // the named grades (GRADES): name -> CSS filter
+  var WORDS = {json.dumps(words)};
+  function wordAt(text, after) {{
+    var want = String(text).toLowerCase().replace(/[^a-z0-9%$']/g, ''), from = after || 0;
+    for (var i = 0; i < WORDS.length; i++) {{
+      if (WORDS[i][0] >= from - 0.001 && WORDS[i][2].toLowerCase().replace(/[^a-z0-9%$']/g, '') === want) return WORDS[i][0];
+    }}
+    return null;
+  }}
+  function wordSpan(text, after) {{                    // [start, end] of the same word, or null
+    var t = wordAt(text, after);
+    if (t === null) return null;
+    for (var i = 0; i < WORDS.length; i++) {{ if (Math.abs(WORDS[i][0] - t) < 0.0005) return [WORDS[i][0], WORDS[i][1]]; }}
+    return null;
+  }}
   function on(x, t) {{ tl.set(x, {{ opacity: 1 }}, q(t)); }}
   function off(x, t) {{ tl.set(x, {{ opacity: 0 }}, q(t)); }}
   function pop(x, t) {{

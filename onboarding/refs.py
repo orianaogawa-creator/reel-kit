@@ -685,6 +685,24 @@ them until the type is unreadable, so read the pages. To see one moment at full 
 - sound.music: a bed in most references means yes (unless the sheet shows street or crowd footage, where the
   "bed" may be ambience). sound.sfx is not measured: light, normal, or dense by feel (normal if unsure).
 - grade: the CSS filter closest to the look (warm, cool, contrasty, or "none").
+
+## Mapping to modes (how each mode edits for this creator; every field in kit/STYLE_PACK.md)
+Decide all three modes from the same evidence, so hi-fi, lo-fi and showcase all feel like the same creator.
+- Caption rhythm -> modes.lofi.captions: "word-by-word" (current word lights up), "phrase" (the line lands at once),
+  "single" (one word on screen at a time); words per caption -> max_words / max_chars. modes.hifi.captions:
+  "phrases" (2-4 words), "words" (one at a time) or "lines" (a full sentence).
+- The opening text -> modes.hifi.hook: "two-line" (a plain line over a big display line), "one-line" (one big
+  line), "none" (the first caption carries it).
+- Camera -> modes.hifi.camera: "settle" (a small settle on every cut, slow pushes), "zooms" (hard punch-ins on key
+  phrases), "still" (no camera moves). modes.lofi.zooms: true when punch-ins show up.
+- Black and white moments -> modes.*.bw. Native text boxes -> modes.lofi.text_boxes. Screenshots or UI on top of
+  the speaker -> modes.lofi.overlays; things behind the head -> modes.lofi.backdrops / modes.hifi.behind_head
+  ("often", "sometimes", "never"). Full-screen graphics -> modes.hifi.cards.
+- Transitions (whips, zooms, spins, pushes) -> modes.showcase.transitions, only the ones you see (all of them is the
+  default); how one big word is treated (stamped letter by letter, slammed in, scaled up) -> modes.showcase.
+  emphasis_word; how busy -> modes.showcase.density.
+- How the cuts sound: audio that changes exactly with the picture -> j_lead 0.0-0.1; the next voice arriving a
+  beat before its picture (J-cuts) -> 0.3.
 """
 
 

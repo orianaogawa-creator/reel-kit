@@ -43,7 +43,7 @@ def leads(E):
     """the J-cut lead of every join. J_LEAD, unless the source already has a hard cut in that pause: then the
     outgoing picture runs right up to the source cut and stops there (a frame of the next take never shows), even if
     that puts the picture change a frame or two before the voice (an L-cut). Without this, a pre-cut phone take
-    double-cuts at every join (the claude-3-ways-lofi-style stutter, Oct 2026). edit.J_LEADS overrides."""
+    double-cuts at every join (a stutter on every join). edit.J_LEADS overrides."""
     if getattr(E, "J_LEADS", None):
         return list(E.J_LEADS)
     cuts, out = source_cuts(E), []

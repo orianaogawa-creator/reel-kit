@@ -66,6 +66,15 @@ Starting points by feel (Google Fonts; adjust to the colour and answers):
 | warm, friendly | Fraunces (italic) or DM Serif Display | DM Sans or Nunito Sans | DM Mono | on | 12 | normal | normal |
 | clean, minimal | Inter Tight or Manrope | Inter | JetBrains Mono | off | 6 | calm | light |
 
+How each mode edits, by feel (the `modes` section; `kit/STYLE_PACK.md`):
+
+| feel | hi-fi hook | hi-fi camera | lo-fi captions | transitions (showcase) | emphatic word | j_lead |
+|---|---|---|---|---|---|---|
+| calm, editorial | two-line | settle | word-by-word, 4 words | push, reveal, zoom | stamp | 0.30 |
+| bold, punchy | one-line | zooms | single, caps | whip, zoom, spin, drop | slam | 0.15 |
+| warm, friendly | two-line | settle | phrase, 3 words | push, reveal, drop | scale | 0.30 |
+| clean, minimal | one-line | still | word-by-word, 3 words | push, reveal | scale | 0.20 |
+
 `examples/packs/` has three complete packs to start from or compare against: `default` (neutral), `bold` and
 `soft`. Copy one to `$REEL_KIT_HOME/style/` and change it, or write a new one.
 
@@ -83,7 +92,12 @@ Starting points by feel (Google Fonts; adjust to the colour and answers):
 - `motion`: calm, normal or punchy. `sound.sfx`: light, normal or dense. `sound.music`: "none" (they add music in
   their posting app; a connected music generator can change that per video).
 - `creator`: name, handle, site. Ask once; used only on an end card, and only when they ask for one.
-- `STYLE.md` from the template below.
+- `modes`: how hi-fi, lo-fi and showcase each edit for this creator (every field and how to read it off a brand
+  file or a video: `kit/STYLE_PACK.md`). This is where their inspiration matters most: the caption rhythm, the
+  camera language, the transitions and how a big word lands all come from what their references do, and they carry
+  across all three modes so every video feels like the same person. A brand file rarely says how videos move:
+  without inspiration, take the row for their feel above and confirm it on the board.
+- `STYLE.md` from the template below, including a section per mode.
 - Run `PY pipeline/style.py`: it writes `brand.css` and `fonts/` and prints a WARNING for any colour pair that will
   read badly (low contrast, or emphasis and losses that look alike). Fix every warning before the board: keep the
   brand colour wherever it passes, and use a lighter or darker shade of the same hue only on the ground where it
@@ -92,8 +106,9 @@ Starting points by feel (Google Fonts; adjust to the colour and answers):
 
 ## 5. The board
 `PY onboarding/board.py --clip <one of their videos, if they have one>` -> `style/board/index.html`: their type,
-their colours and what each means, the hook and captions on their own footage in both modes, three cards in
-their style. Show it:
+their colours and what each means, a frame of their own footage in each mode (the hi-fi hook and captions, the
+lo-fi text box and captions as their `modes.lofi` says, the showcase emphatic word), three cards in their style.
+Show it:
 - With Claude artifacts: publish `board/index.html` with every file listed in `board/files.json` (icon "palette").
 - Otherwise: run `python3 storyboard/serve.py <style dir>/board` in the background and send them the address.
 
@@ -130,6 +145,19 @@ Ask: "Does this look like you?" Apply what they say to `style.json` and `STYLE.m
 
 ## Sound
 <effects density; music none unless they hand over a track>
+
+## Hi-fi
+<How a produced video edits for them: the hook (two lines, one big line, or none), how captions are cut, what goes
+behind the head and how often, how often a card carries a beat, what the camera does on cuts, black and white or
+not. Name the reference that shows it.>
+
+## Lo-fi
+<How a selfie video edits for them: caption rhythm (word by word, a phrase at once, one word at a time) and
+position, text boxes or not, what lands on top of them and what swaps in behind them, zooms or not.>
+
+## Showcase
+<How a show-off video edits for them: how one big word lands, which transitions fit (and which never), how busy
+it gets, and a motif idea if one suits them.>
 
 ## Never
 - <their never-do list: from the brand file, the inspiration, or what they said>

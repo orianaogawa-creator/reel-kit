@@ -5,7 +5,10 @@ leaves the frame: the real thing lands on top of them or swaps in behind their h
 native-looking text boxes carry the hook and the CTA. Set `STYLE = "lofi"` in edit.py. Reference:
 `examples/lofi/edit.py`. The cut, lip sync, cutout, QA and render are the same pipeline as hi-fi.
 
-The look (fonts, colours, caption box, pace) is the creator's, from `<project>/style/`.
+The creator's pack decides how lo-fi looks and edits for them: `<project>/style/STYLE.md` (its Lo-fi section)
+and `modes.lofi` in `style.json`: the caption rhythm (word by word, a phrase at once, or one word at a time) and
+line length, text boxes or not, how often things land on top or swap in behind, zooms or not, black and white or
+not, the J-cut lead (`kit/STYLE_PACK.md`). Read both first; below are the defaults when the pack is silent.
 
 ## The rule
 They never leave the frame. Nothing cuts away to a full-screen card: the real thing lands on top of them or swaps

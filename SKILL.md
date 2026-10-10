@@ -1,6 +1,6 @@
 ---
 name: reel-kit
-description: Turns one talking-head clip into a finished vertical video (Reels, TikTok, Shorts) in the creator's own style - a J-cut edit, captions, type behind their head, hand-built motion-graphic cards and sound effects - with an interactive storyboard they comment on before anything renders. Two modes - hi-fi (produced, sit-down takes, full-screen data cards) and lo-fi (phone selfie takes, overlays, word-by-word captions). The first run builds their style from a brand file, 2 or 3 inspiration videos, or four questions. Use when someone asks to edit a talking-head video or reel, types /reel-kit, $reel-kit or @reel-kit, or wants to set up or change their video style.
+description: Turns one talking-head clip into a finished vertical video (Reels, TikTok, Shorts) in the creator's own style - a J-cut edit, captions, type behind their head, hand-built motion graphics and sound effects - with an interactive storyboard they comment on before anything renders. Three modes - hi-fi (produced, full-screen data cards), lo-fi (phone selfie, overlays, word-by-word captions) and showcase (a different hand-built motion graphic on every beat). The first run builds their style from a brand file, 2 or 3 inspiration videos, or four questions, and it shapes how all three modes edit. Use when someone asks to edit a talking-head video or reel, types /reel-kit, $reel-kit or @reel-kit, or wants to set up or change their video style.
 ---
 
 # reel-kit
@@ -41,17 +41,25 @@ how cards are built, how sound sits under the voice.
 3. "Change my style" at any time: onboarding steps 4 and 5 on the current pack.
 
 ## Modes
-The creator picks: **hi-fi** or **lo-fi** (also accept "hifi", "high", "produced", "lofi", "low", "selfie"). No
-mode in the request: ask "Hi-fi or lo-fi?" in one line before anything else; never infer it from the footage.
+The creator picks: **hi-fi**, **lo-fi** or **showcase** (also accept "hifi", "high", "produced", "lofi", "low",
+"selfie", "show-off", "show off", "flex"). No mode in the request: ask "Hi-fi, lo-fi or showcase?" in one line
+before anything else; never infer it from the footage.
 - **Hi-fi** (`KIT/modes/HIFI.md`): produced. Two framings of one take, full-screen data cards by card agents, type
   behind the head. Reference: `KIT/examples/hifi/edit.py`.
 - **Lo-fi** (`KIT/modes/LOFI.md`): selfie. They never leave the frame; real artifacts land on top of them or behind
   their head; word-by-word captions; text boxes. No card agents. Reference: `KIT/examples/lofi/edit.py`.
-Read the mode file and the creator's `STYLE.md` before step 3.
+- **Showcase** (`KIT/modes/SHOWCASE.md`): the show-off edit on any footage. Every beat a different technique the
+  words call for, one recurring motif, a different transition on every cut, dense sound; built by FX agents from
+  `KIT/fx/LIBRARY.md` (contract `KIT/kit/FX_BRIEF.md`), lo-fi captions underneath. Reference:
+  `KIT/examples/showcase/edit.py`.
+How each mode edits is the creator's, not the kit's: their `STYLE.md` has a section per mode and `style.json` a
+`modes` block (hook shape, caption rhythm, camera, transitions, how a big word lands; `KIT/kit/STYLE_PACK.md`).
+Read the mode file, then the creator's `STYLE.md` and `modes` for that mode, before step 3; where they disagree with
+the mode file, the creator wins.
 
 ## 1. Intake
 - The clip, the source it talks about (article, study, post, document) if there is one, and a short slug.
-- Scaffold: `PY KIT/pipeline/new.py <slug> "<clip>" "<Title>" --mode hifi|lofi` -> `HOME/projects/<slug>/` with
+- Scaffold: `PY KIT/pipeline/new.py <slug> "<clip>" "<Title>" --mode hifi|lofi|showcase` -> `HOME/projects/<slug>/` with
   `edit.py` (FRAMES seeded from the clip's size) and the style pack copied into `style/`.
 - Read the source. Grab screenshots of the real thing for cards (a browser tool if you have one).
 - Look at a few frames of the footage to set FRAMES for this shoot (face centre, eyes, chin).
@@ -61,7 +69,7 @@ Read the mode file and the creator's `STYLE.md` before step 3.
   read `words.json`. People repeat a line until it lands: keep the LAST clean take of each line.
 - Find the pauses: `ffmpeg -i <clip> -af silencedetect=noise=-35dB:d=0.25 -f null -`. Set `KEEP` (source seconds,
   ~0.05s before the first word, at the silence after the last), `FRAMES`, `SHOTS`, `HOLD` (hi-fi 0.6, or 1.3 with
-  an end card; lo-fi 0.04, since a phone take ends on its last word), `PROMPT` (names and terms) and `FIXES`.
+  an end card; lo-fi 0.04, since a phone take ends on its last word; showcase 0.5), `PROMPT` (names and terms) and `FIXES`.
 - `PY KIT/pipeline/cut.py <project> --plan`: the sync table must show every piece reading its own audio. Then
   `PY KIT/pipeline/cut.py <project>` and `PY KIT/pipeline/words.py <project>` again on the cut.
 - Copy `assets/aroll.mp4` to `public/clean.mp4`. If anything goes behind the head, start the cutout in the
@@ -93,8 +101,17 @@ Hold it to restraint: objects, places and textures that look shot. Never generat
 generated B-roll as the look of the video. Log each in `GENERATED` as `("p04", "<what it is>, <model>")`; the
 storyboard tags them so the creator can cut any. Minimal by default; more only when they ask in their notes.
 
-## 4. Cards (hi-fi)
-One agent per card (cards that share geometry go to one agent), all launched at once. Each prompt: read
+## 4. Cards (hi-fi) or effects (showcase)
+**Showcase:** FX agents instead of cards. Write the beat map first (`KIT/modes/SHOWCASE.md`: a technique for every
+line, one motif, the hook on frame 0, a transition per cut), put every entry in `FX` with its window and layer, then
+launch 4 to 8 agents at once, grouped by technique. Each prompt: read `KIT/kit/FX_BRIEF.md`,
+`<project>/style/STYLE.md` (its Showcase section) and the `KIT/fx/LIBRARY.md` entries to start from; its ids, layers
+and windows; the words with output times; where the head is in that shot; the real assets; its own sandbox name for
+`PY KIT/pipeline/fxsandbox.py <project> <name> --only <ids> --at <times>`; run `hyperframes check`; report frames,
+SFX, edit.py changes and snapshot paths. Review every still at full size, send fixes back to the same agent, merge
+frames into FX and SFX into SOUND. No subagents: build the effects yourself one at a time from the same brief.
+
+**Hi-fi cards:** one agent per card (cards that share geometry go to one agent), all launched at once. Each prompt: read
 `KIT/kit/CARD_BRIEF.md` and `<project>/style/STYLE.md`; KIT and PROJECT paths; the library card to start from;
 the card id and folder `<project>/cards/<id>/`; the exact frame count (`data-duration` = frames/30); the window in
 the video; the spoken words with CARD times; the data and labels; what it shows and when; phase 1 only (still.jpg

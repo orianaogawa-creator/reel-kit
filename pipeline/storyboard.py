@@ -28,7 +28,7 @@ SFX_WORDS = {
     "whoosh": "whoosh", "whoosh-soft": "soft whoosh", "whoosh-deep": "deep whoosh", "whoosh-long": "long whoosh",
     "pop": "pop", "click": "click", "tick": "tick", "clicks-run": "clicking run", "ding": "ding", "shutter": "shutter",
     "stamp": "stamp", "impact-low": "low impact", "boom-low": "low boom", "riser": "riser", "riser-long": "long riser",
-    "drum-hit": "drum hit", "scratch": "scratch", "switch-off": "switch-off",
+    "drum-hit": "drum hit", "scratch": "scratch", "switch-off": "switch-off", "typing": "typing", "key": "key press",
 }
 KIND_WORDS = {"thesis": "display word", "big": "big", "strike": "struck through"}
 

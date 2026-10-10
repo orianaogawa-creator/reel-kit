@@ -5,7 +5,8 @@ over the speaker while their voice keeps playing; the main edit lays live captio
 came from the same hand as every other card in the video, and like the creator, not like this kit.
 
 KIT is this repo. PROJECT is the video's folder (your prompt gives both).
-- `PROJECT/style/STYLE.md`: the creator's style in words (read it first). `PROJECT/style/brand.css`: their tokens and fonts.
+- `PROJECT/style/STYLE.md`: the creator's style in words, with a Hi-fi section that says how their cards should
+  feel (read it first). `PROJECT/style/brand.css`: their tokens and fonts.
 - `KIT/kit/TOKENS.md`: every token and what it means. `KIT/kit/card.css`: type voices and devices built on them.
 - `KIT/cards/LIBRARY.md`: the card patterns; start from the closest one when your prompt names it.
 - `KIT/kit/template.html`: a working skeleton with `q()`, `tok()`, `draw()` and `count()`.

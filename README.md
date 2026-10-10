@@ -17,10 +17,16 @@ Works with Claude Code and Codex. Runs on your computer, on your footage. Free a
 - A storyboard first: every beat with real frames, what moves, what you hear, and what the agent needs from you.
   Leave notes on any beat. Nothing renders until you say go.
 
-## Two modes
+## Three modes
 - **Hi-fi**: produced. A sit-down take, full-screen data cards, type behind your head.
 - **Lo-fi**: selfie. A phone take where you never leave the frame; screenshots and clips land on top of you or
   behind your head, captions light up word by word, native-looking text boxes carry the hook and the call to action.
+- **Showcase**: the show-off edit. Every line gets a different hand-built motion graphic the words call for (kinetic
+  type, a magazine cover behind your head, a grade that wipes across, a grid of you, a timeline that builds), a
+  different transition on every cut, and dense sound. Seventeen effects ship in the library.
+
+Your style decides how each mode edits for you, not just its colours: the hook shape, how captions move, what the
+camera does, which transitions you use and how a big word lands all come from your brand and your inspiration.
 
 ## Your style, not ours
 The first time you run it, the agent builds your style pack:
@@ -28,8 +34,8 @@ The first time you run it, the agent builds your style pack:
 2. **No?** Send 2 or 3 links to videos whose style you like. It studies them: pace, captions, colour, motion.
 3. **Neither?** Four quick questions.
 
-Then it shows you a style board, your type and colours with captions on a frame of your own footage and a few
-cards in your look, and asks if it looks like you. Change anything, any time: "update my style".
+Then it shows you a style board: your type and colours, a frame of your own footage in each of the three modes,
+and a few cards in your look, and asks if it looks like you. Change anything, any time: "update my style".
 
 The pack lives in `~/reel-kit/style/`, outside the skill, so updates never touch it. Each video keeps a copy of
 the style it was made with.
@@ -99,12 +105,14 @@ SKILL.md              the instructions every agent reads
 modes/                hi-fi and lo-fi: how each edit is structured
 onboarding/           style setup: ONBOARDING.md, refs.py (studies inspiration videos), board.py (the style board)
 pipeline/             cut, transcribe, cutout, build, mix, storyboard, QA, render (Python)
-kit/                  the composition's CSS, the card template and brief, the style token contract
+kit/                  the composition's CSS, the card and effect briefs, the style token and style pack references
 cards/                the motion-graphic card library (LIBRARY.md), each card driven by your tokens
+fx/                   the showcase effects library (LIBRARY.md), each effect driven by your tokens
 audio/sfx/            sound effects, synthesized from scratch for this kit (CC0)
 storyboard/           the review page and a local server for hosts without artifacts
 examples/             a reference edit.py for each mode, and three sample style packs
 setup/                setup.py and package.py
+dev/                  the kit's own test bench: a drawn stand-in figure and the effects lab that previews every effect
 ```
 
 ## Credits and licenses

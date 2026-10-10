@@ -51,6 +51,16 @@ DEFAULT = {
         "hifi": {"box": True, "uppercase": False, "size": 56, "y": 1236},
         "lofi": {"box": True, "size": 66, "y": 1318},
     },
+    # how each mode edits for this creator (kit/STYLE_PACK.md has every value and how to read it off a brand or
+    # an inspiration video). The engine applies j_lead, camera and the lo-fi caption settings; agents read the rest.
+    "modes": {
+        "hifi": {"hook": "two-line", "captions": "phrases", "emphasis": ["thesis", "big", "strike"],
+                 "behind_head": "often", "cards": "often", "camera": "settle", "bw": True, "j_lead": 0.30},
+        "lofi": {"captions": "word-by-word", "max_words": 4, "max_chars": 24, "text_boxes": True,
+                 "overlays": "often", "backdrops": "often", "zooms": True, "bw": True, "j_lead": 0.30},
+        "showcase": {"emphasis_word": "stamp", "transitions": ["whip", "zoom", "spin", "push", "drop", "reveal"],
+                     "density": "high", "motif": "", "j_lead": 0.30},
+    },
     "grade": "contrast(1.04) saturate(1.0)",                      # CSS filter on the footage; "none" for straight
     "motion": "calm",                                             # calm | punchy (settles vs hard zooms)
     "sound": {"sfx": "normal", "music": "none"},                  # sfx: light | normal | dense
@@ -213,6 +223,7 @@ def check(S):
     light, dark = rgba(C["light"]), rgba(C["dark"])
     pairs = [("ink on light", C["ink"], light, 7), ("light text on dark", C["light"], dark, 7),
              ("caption text on its box", C["caption_ink"], rgba(C["caption_box"]), 4.5),
+             ("accent words inside the caption box", C["accent"], rgba(C["caption_box"]), 3),
              ("text box ink on its background", C["textbox_ink"], rgba(C["textbox_bg"]), 4.5),
              ("accent on dark", C["accent"], dark, 3), ("accent_on_light on light", C["accent_on_light"], light, 3),
              ("negative on dark", C["negative"], dark, 3), ("negative_on_light on light", C["negative_on_light"], light, 3),

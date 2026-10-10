@@ -4,8 +4,11 @@ For a sit-down take, ideally 4K and locked off. The video cuts between two frami
 behind the speaker's head, and full-screen motion-graphic cards carry the numbers. Set `STYLE = "hifi"` in edit.py.
 Reference: `examples/hifi/edit.py`.
 
-This file is the structure. The look (fonts, colours, caption treatment, grade, pace) belongs to the creator and
-lives in their style pack: `<project>/style/STYLE.md` in words, `style.json` in values. Where the two disagree, the
+This file is the structure and its defaults. The creator's pack decides how hi-fi looks and edits for them:
+`<project>/style/STYLE.md` (its Hi-fi section) in words, `style.json` in values: the look (fonts, colours, caption
+treatment, grade, pace) and `modes.hifi`: the hook shape, how captions are cut, how often things go behind the head
+and how often a card carries a beat, the camera (settle, zooms or still), black and white or not, the J-cut lead
+(every field: `kit/STYLE_PACK.md`). Read both before writing edit.py. Where they and this file disagree, the
 creator's pack wins.
 
 ## The rule

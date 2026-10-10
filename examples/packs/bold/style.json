@@ -45,9 +45,9 @@
       "#3DDC84",
       "#FF4D4D"
     ],
-    "caption_box": "#FFD400",
-    "caption_ink": "#0B0B0B",
-    "caption_dim": "rgba(11,11,11,.45)",
+    "caption_box": "rgba(11,11,11,.92)",
+    "caption_ink": "#FFFFFF",
+    "caption_dim": "rgba(255,255,255,.42)",
     "textbox_bg": "#FFD400",
     "textbox_ink": "#0B0B0B"
   },
@@ -69,5 +69,43 @@
     }
   },
   "grade": "contrast(1.12) saturate(1.1)",
-  "motion": "punchy"
+  "motion": "punchy",
+  "modes": {
+    "hifi": {
+      "hook": "one-line",
+      "captions": "phrases",
+      "emphasis": [
+        "big",
+        "strike"
+      ],
+      "behind_head": "often",
+      "cards": "sometimes",
+      "camera": "zooms",
+      "bw": false,
+      "j_lead": 0.15
+    },
+    "lofi": {
+      "captions": "single",
+      "max_words": 1,
+      "max_chars": 14,
+      "text_boxes": true,
+      "overlays": "often",
+      "backdrops": "sometimes",
+      "zooms": true,
+      "bw": false,
+      "j_lead": 0.15
+    },
+    "showcase": {
+      "emphasis_word": "slam",
+      "transitions": [
+        "whip",
+        "zoom",
+        "spin",
+        "drop"
+      ],
+      "density": "high",
+      "motif": "",
+      "j_lead": 0.15
+    }
+  }
 }

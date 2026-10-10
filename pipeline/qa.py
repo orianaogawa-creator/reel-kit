@@ -66,6 +66,17 @@ def cam_scale(E, TL, t):
     return v0 + (v1 - v0) * ((t - s0) / d), True
 
 
+def under_fx(E, t):
+    """is t inside an effect that repaints the background (behind), moves the picture (cam) or covers it (over)?
+    Whole-frame matching can't see the lips there; the cutout and footage copies are frame-exact anyway. Effects that
+    span almost the whole video (camera-transitions) only act on the cuts, where no sample is taken."""
+    for F in getattr(E, "FX", []):
+        a, b = F["at"], B.T(E, F["end"])
+        if F.get("layer", "top") in ("behind", "cam", "over") and b - a < 0.9 * E.TOTAL and a <= t < b:
+            return True
+    return False
+
+
 def lip_sync(render, E, TL, span=0.6):
     """For two quiet moments in every on-camera piece, decode the rendered frame and the source frames around the
     second you hear at that moment (frame-exact seeks, the same way cut.py extracts), crop the source the way the
@@ -77,7 +88,8 @@ def lip_sync(render, E, TL, span=0.6):
         a, b = p["out_start"], min(p["out_end"], TL["total_audio"])
         if b - a < 1.0:
             continue
-        cands = [t for t in np.arange(a + 0.3, b - 0.3, 1 / FPS) if B.visible(E, t) and not cam_scale(E, TL, t)[1]]
+        cands = [t for t in np.arange(a + 0.3, b - 0.3, 1 / FPS)
+                 if B.visible(E, t) and not cam_scale(E, TL, t)[1] and not under_fx(E, t)]
         if not cands:
             continue
         for t in sorted({cands[len(cands) // 3], cands[(2 * len(cands)) // 3]}):

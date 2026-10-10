@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """New: scaffold a video project -> $REEL_KIT_HOME/projects/<slug>/ (default ~/reel-kit/projects/<slug>/), with the
 creator's style pack copied in and a starter edit.py.
-Run: PY pipeline/new.py <slug> "<source clip path>" ["Title"] --mode hifi|lofi
+Run: PY pipeline/new.py <slug> "<source clip path>" ["Title"] --mode hifi|lofi|showcase
 FRAMES are seeded from the clip: 4K landscape gets two 9:16 crops (WIDE, CLOSE), anything else full frame + a 1.25x CLOSE.
 The style pack is copied, not linked, so an old project still renders the same after the creator changes their style.
 """
@@ -16,7 +16,7 @@ import style as ST  # noqa: E402
 STARTER = '''"""{title}: the one file that describes this video. Read modes/{mode_doc}, then copy what you need from
 examples/{mode}/edit.py. Times are on the OUTPUT timeline unless marked source."""
 TITLE = "{title}"
-STYLE = "{mode}"                    # hifi (modes/HIFI.md) or lofi (modes/LOFI.md)
+STYLE = "{mode}"                    # hifi (modes/HIFI.md), lofi (modes/LOFI.md) or showcase (modes/SHOWCASE.md)
 SRC = "{src}"
 
 # ---- cut (source seconds): keep ranges from silencedetect, last clean take of every line
@@ -43,12 +43,21 @@ NEEDS = []                          # (beat id, what the creator should send: a 
 GENERATED = []                      # (beat id, what a connected generator made, which model); empty without one
 {extra}'''
 
+SHOWCASE = '''
+# ---- showcase (modes/SHOWCASE.md): the lo-fi type system + one hand-built motion graphic per beat
+KARAOKE = dict(huge=[], hide=[])    # huge: lines set at 124px; hide: windows an effect carries the words in
+BOXES = []                          # native text boxes (hook, CTA) when no effect carries them
+OVERLAYS = []
+FX = []                             # dict(id, layer behind|cam|top|over, at, end, frames=[...], note=); files in fx/<id>/
+GRADES = []                         # (start, end, "warm"|"moody"|css filter): looks the script asks for
+J_LEADS = None                      # per-join J-cut leads, when one shot must stop early (a lean-in to the phone)
+'''
 LOFI = '''
 KARAOKE = {}                        # dict(huge=[(start, end)], hide=[(start, end)])
 BOXES = []                          # Instagram-style text boxes: hook, chapter labels, CTA
 OVERLAYS = []                       # real screenshots or clips dropped on top of the speaker
 '''
-EXTRA = {"lofi": LOFI}
+EXTRA = {"lofi": LOFI, "showcase": SHOWCASE}
 
 
 def frames_for(src):
@@ -96,8 +105,8 @@ def main():
             mode = argv[i + 1] if i + 1 < len(argv) else None
             argv = argv[:i] + argv[i + 2:]
     args = [a for a in argv if not a.startswith("--")]
-    if len(args) < 2 or mode not in ("hifi", "lofi"):
-        sys.exit(__doc__ + "\n--mode hifi|lofi is required: the creator picks the mode, never guess it.")
+    if len(args) < 2 or mode not in ("hifi", "lofi", "showcase"):
+        sys.exit(__doc__ + "\n--mode hifi|lofi|showcase is required: the creator picks the mode, never guess it.")
     slug, src = args[0], os.path.abspath(os.path.expanduser(args[1]))
     if not os.path.exists(src):
         sys.exit(f"source clip not found: {src}")
@@ -105,7 +114,7 @@ def main():
     project = os.path.join(ST.HOME, "projects", slug)
     if os.path.exists(os.path.join(project, "edit.py")):
         sys.exit(f"{project}/edit.py already exists")
-    for d in ("assets", "audio", "cards", "public/cards", "public/media", "renders", "storyboard", "work"):
+    for d in ("assets", "audio", "cards", "fx", "public/cards", "public/media", "renders", "storyboard", "work"):
         os.makedirs(os.path.join(project, d), exist_ok=True)
     copy_pack(project)
     if not os.path.exists(os.path.join(VENDOR, "gsap.min.js")):
@@ -113,7 +122,7 @@ def main():
     shutil.copytree(VENDOR, os.path.join(project, "public", "vendor"), dirs_exist_ok=True)
     shutil.copy(os.path.join(KIT, "kit", "hyperframes.json"), os.path.join(project, "public"))
     with open(os.path.join(project, "edit.py"), "w") as fh:
-        fh.write(STARTER.format(title=title, src=src, mode=mode, mode_doc=f"{mode.upper()}.md", hold=0.6 if mode == "hifi" else 0.04,
+        fh.write(STARTER.format(title=title, src=src, mode=mode, mode_doc=f"{mode.upper()}.md", hold=0.6 if mode == "hifi" else 0.04 if mode == "lofi" else 0.5,
                                 frames=frames_for(src), extra=EXTRA.get(mode, "")))
     print(project)
 

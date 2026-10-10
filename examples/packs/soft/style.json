@@ -69,5 +69,42 @@
     }
   },
   "grade": "contrast(1.02) saturate(0.92) sepia(0.06)",
-  "motion": "calm"
+  "motion": "calm",
+  "modes": {
+    "hifi": {
+      "hook": "two-line",
+      "captions": "phrases",
+      "emphasis": [
+        "thesis",
+        "big"
+      ],
+      "behind_head": "sometimes",
+      "cards": "often",
+      "camera": "settle",
+      "bw": false,
+      "j_lead": 0.3
+    },
+    "lofi": {
+      "captions": "phrase",
+      "max_words": 3,
+      "max_chars": 20,
+      "text_boxes": true,
+      "overlays": "sometimes",
+      "backdrops": "often",
+      "zooms": false,
+      "bw": false,
+      "j_lead": 0.3
+    },
+    "showcase": {
+      "emphasis_word": "scale",
+      "transitions": [
+        "push",
+        "reveal",
+        "drop"
+      ],
+      "density": "medium",
+      "motif": "",
+      "j_lead": 0.3
+    }
+  }
 }
