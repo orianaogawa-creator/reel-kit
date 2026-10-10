@@ -23,6 +23,11 @@ PY = next((p for p in (_venv_py(HOME), _venv_py(KIT)) if os.path.exists(p)), _ve
 VENDOR = next((d for d in (os.path.join(HOME, "vendor"), os.path.join(KIT, "kit", "vendor"))
                if os.path.exists(os.path.join(d, "gsap.min.js"))), os.path.join(HOME, "vendor"))
 MODELS = os.path.join(HOME, "models")
+_BROWSER = os.path.join(HOME, "vendor", "browser-path.txt")      # setup picked a render browser (Linux on ARM)
+if os.path.exists(_BROWSER) and not os.environ.get("HYPERFRAMES_BROWSER_PATH"):
+    _b = open(_BROWSER).read().strip()
+    if os.path.exists(_b):
+        os.environ["HYPERFRAMES_BROWSER_PATH"] = _b              # every HyperFrames call below inherits it
 HF = ["npx.cmd" if os.name == "nt" else "npx", "-y", "hyperframes@0.8.139"]                               # pinned: every reel renders the same way
 FPS = 30
 
@@ -94,7 +99,7 @@ DEFAULTS = dict(
 )
 
 
-BROWSER_BLOCKED = ("MachPortRendezvousServer", "Failed to launch the browser process")
+BROWSER_BLOCKED = ("MachPortRendezvousServer",)                   # a macOS sandbox (Codex) refusing the browser
 
 
 def hf(args, cwd):
@@ -105,10 +110,13 @@ def hf(args, cwd):
         out = r.stdout + r.stderr
         print(out[-2500:], file=sys.stderr)
         again = f"  cd \"{cwd}\" && {' '.join(HF + list(args))}"
-        if any(s in out for s in BROWSER_BLOCKED):
+        if any(s in out for s in BROWSER_BLOCKED) or (os.environ.get("CODEX_SANDBOX") and "Failed to launch the browser" in out):
             sys.exit("The render browser can't start here: this agent's sandbox blocks headless Chrome. Give the "
                      "session full access (Codex: Full access, or `codex --sandbox danger-full-access`) or run this "
                      f"outside the sandbox:\n{again}")
+        if "Failed to launch the browser" in out:
+            sys.exit("The render browser failed to start (its error is above). Run `python3 setup/setup.py`: it tests "
+                     f"the browser and installs one that works on this computer. Then rerun:\n{again}")
         sys.exit(f"hyperframes {args[0]} failed. Rerun it to see everything:\n{again}")
     return r
 

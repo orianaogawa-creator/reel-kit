@@ -1,10 +1,17 @@
 # reel-kit
 
+> [!IMPORTANT]
+> **Recommended model:** for best results at the time this repo was published (October 2026), use **Claude Opus 5.5
+> on max effort**. In Claude Code, start with `claude --model opus --effort max`. In Claude Cowork, pick Opus 5.5 and
+> the highest effort in the model menu. On Codex and ChatGPT Work, use the most capable model at its highest
+> reasoning effort.
+
 An AI agent skill that turns one talking-head clip into a finished vertical video, in your own style. Give it a
 take; it cuts the edit, writes the captions, builds the motion graphics and lays the sound, then shows you a
 storyboard to comment on before anything renders.
 
-Works with Claude Code and Codex. Runs on your computer, on your footage. Free and open source.
+Works with Claude Code, Claude Cowork, Codex and ChatGPT Work. Runs on your computer, on your footage. Free and
+open source.
 
 ![The same six moments of one edit in three style packs: default, bold and soft](docs/img/styles.jpg)
 <sub>One edit, three style packs. Same cut, same effects, same timing; the look is the pack's. Every image in this
@@ -57,17 +64,44 @@ the style it was made with.
 <p align="center"><img src="docs/img/board.jpg" width="600" alt="A style board: type, colours with their meanings, and a frame in each mode"></p>
 
 ## Install
-You need a Mac or Linux computer (Windows is untested; WSL should work), plus ffmpeg, Node 18+ and Python 3.10+.
-The setup script checks all of it and prints the exact fix for anything missing.
+It runs on your own computer, on your own footage: a Mac or Linux (Windows is untested; WSL should work) with
+ffmpeg, Node 22+ and Python 3.10+. The setup script checks everything, prints the exact fix for anything missing,
+and draws a test frame, so READY means it can render.
 
-**Claude Code**
+| Where you use it | Install it | Start it |
+|---|---|---|
+| [Claude Code](#claude-code) (recommended) | clone into `~/.claude/skills`, run setup | `/reel-kit` |
+| [Claude Cowork](#claude-cowork) | upload `reel-kit.zip` as a skill | ask for reel-kit in a Cowork task |
+| [Codex](#codex) | clone into `~/.agents/skills`, run setup | `$reel-kit` |
+| [ChatGPT Work](#chatgpt-work) | upload `reel-kit.zip` as a skill | `@reel-kit` in a Work task |
+
+Tested end to end in Claude Code and Codex on macOS, and on Linux (ARM). Cowork and ChatGPT Work run the same steps
+inside their own sandboxes.
+
+### Claude Code
 ```sh
 git clone https://github.com/justynberk/reel-kit ~/.claude/skills/reel-kit
 python3 ~/.claude/skills/reel-kit/setup/setup.py
 ```
-Then type `/reel-kit` in Claude Code.
+Then start Claude Code with `claude --model opus --effort max` and type `/reel-kit`. To update later:
+`git -C ~/.claude/skills/reel-kit pull`, then run setup again.
 
-**Codex** (CLI, IDE extension or app)
+### Claude Cowork
+Cowork (the Claude desktop app) runs tasks in a Linux sandbox on your computer that can only reach the folders you
+give it.
+1. Download `reel-kit.zip` from the [latest release](https://github.com/justynberk/reel-kit/releases/latest).
+2. In the Claude desktop app: Customize > Skills, then + > Create skill > Upload a skill, and pick the zip.
+3. In Settings > Capabilities, turn on code execution and file creation.
+4. Make a folder for your videos, for example `reel-kit` in your home folder, and put your clips in it. Start a
+   Cowork task, give it access to that folder, and ask: "Use reel-kit to make a hi-fi video from my-clip.mov."
+5. The first run sets the kit up inside the sandbox: ffmpeg, Node, a render browser and the speech model (a few GB,
+   10 to 20 minutes, once). Your style, projects and finished videos are saved in the folder you gave it, so they
+   stay on your computer. Renders use the sandbox's processor: slower than Claude Code, same result.
+
+If the sandbox can't install software or reach the internet on your setup, use Claude Code instead.
+
+### Codex
+For the Codex CLI, the IDE extension or the Codex tab in the ChatGPT desktop app:
 ```sh
 git clone https://github.com/justynberk/reel-kit ~/.agents/skills/reel-kit
 python3 ~/.agents/skills/reel-kit/setup/setup.py
@@ -76,18 +110,21 @@ Then type `$reel-kit`, or ask Codex to edit your clip with reel-kit. Codex runs 
 the browser the kit renders with, so give the session Full access (the permissions menu in the app, or
 `codex --sandbox danger-full-access`); setup tells you if it can't render.
 
-**Claude Cowork** (desktop app): download `reel-kit.zip` from the latest release, then Customize > Skills, + >
-Create skill > Upload a skill. Turn on code execution and file creation. Rendering needs Cowork's sandbox to install ffmpeg and
-Node; if it can't, use Claude Code.
+### ChatGPT Work
+ChatGPT Work runs in the new ChatGPT desktop app (not ChatGPT Classic) and does its local work through the Codex
+built into it.
+1. Download `reel-kit.zip` from the [latest release](https://github.com/justynberk/reel-kit/releases/latest).
+2. In ChatGPT: your profile icon > Skills, then upload the zip. ChatGPT scans uploaded skills and may mark this one
+   "Needs review" because it contains code; that's expected.
+3. Make a folder for your videos, for example `reel-kit` in your home folder, put your clips in it, and open it in
+   a Work task so ChatGPT has access to it.
+4. Rendering opens a headless browser, which the Codex sandbox blocks: give the task Full access when it asks.
+5. Ask: "@reel-kit make a lo-fi video from my-clip.mp4." The first run sets the kit up in that folder (a few
+   minutes, once).
 
-**ChatGPT**: skills there run in OpenAI's hosted sandbox, which can't install the video tools or reach your
-footage. Use Codex with the same account instead.
-
-To update later: `git -C ~/.claude/skills/reel-kit pull` (or the Codex path), then run setup again.
-
-Setup takes a few minutes the first time: it creates the kit's own Python environment, downloads GSAP and the
-render browser, and checks everything else. All of it goes in `~/reel-kit/`, next to your style and your projects,
-never inside the skill folder. Run it again any time; it only fixes what's missing.
+Setup creates the kit's own Python environment, downloads GSAP and the render browser, and checks everything
+else. All of it goes in `~/reel-kit/` (or the folder you gave Cowork or ChatGPT), next to your style and your
+projects, never inside the skill folder. Run it again any time; it only fixes what's missing.
 
 ## Make a video
 1. Run the skill with your clip, the mode and what it's about:

@@ -32,7 +32,9 @@ OS = "macos" if sys.platform == "darwin" else "windows" if WIN else "linux"
 FIX = {
     "ffmpeg": {"macos": "brew install ffmpeg", "linux": "sudo apt install ffmpeg",
                "windows": "winget install --id Gyan.FFmpeg -e   (then reopen the terminal)"},
-    "node": {"macos": "brew install node", "linux": "install Node 18+ from https://nodejs.org (apt's is often too old)",
+    "node": {"macos": "brew install node",
+             "linux": "Node 22+ (the render engine needs it; apt's is usually older): "
+                      "curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - && sudo apt-get install -y nodejs",
              "windows": "winget install --id OpenJS.NodeJS.LTS -e   (then reopen the terminal)"},
     "python": {"macos": "brew install python@3.12", "linux": "sudo apt install python3 python3-venv",
                "windows": "winget install --id Python.Python.3.12 -e"},
@@ -72,8 +74,12 @@ FRAME = """<!doctype html><html><head><meta charset="utf-8"><title>render test</
 </body></html>"""
 
 
-def render_test():
-    """launch the render browser for real: one frame of a one-second composition. READY has to mean it can render"""
+BROWSER_FILE = os.path.join(HOME, "vendor", "browser-path.txt")     # a browser setup picked; the pipeline uses it
+PLAYWRIGHT = "playwright@1.56.1"
+
+
+def frame_test(browser=None):
+    """one frame of a one-second composition with the render browser; returns (ok, output)"""
     import glob
     import tempfile
     d = tempfile.mkdtemp(prefix="reel-kit-render-test-")
@@ -82,17 +88,55 @@ def render_test():
     shutil.copy(os.path.join(KIT, "kit", "hyperframes.json"), d)
     with open(os.path.join(d, "index.html"), "w") as fh:
         fh.write(FRAME)
-    r = run(HF + ["snapshot", "--at", "0.5", "--no-end", "--describe", "false"], cwd=d)
+    env = dict(os.environ, **({"HYPERFRAMES_BROWSER_PATH": browser} if browser else {}))
+    r = subprocess.run(HF + ["snapshot", "--at", "0.5", "--no-end", "--describe", "false"], cwd=d,
+                       capture_output=True, text=True, env=env)
     good = r.returncode == 0 and bool(glob.glob(os.path.join(d, "snapshots", "frame-*.png")))
-    out = r.stdout + r.stderr
+    shutil.rmtree(d, ignore_errors=True)
+    return good, r.stdout + r.stderr
+
+
+def linux_browser():
+    """Linux on ARM (Claude Cowork's VM, Raspberry Pi, ARM servers) has no headless Chrome build, and Ubuntu's
+    chromium-browser is a snap wrapper that won't start in a VM or container: install Playwright's Chromium into
+    HOME/browsers instead and remember it. Returns the path that renders, or None."""
+    dest = os.path.join(HOME, "browsers")
+    env = dict(os.environ, PLAYWRIGHT_BROWSERS_PATH=dest)
+    print("installing a render browser that works on this Linux (Chromium, about 200 MB, once) ...", flush=True)
+    root = hasattr(os, "geteuid") and os.geteuid() == 0
+    cmd = ["npx", "-y", PLAYWRIGHT, "install"] + (["--with-deps"] if root else []) + ["chromium"]
+    r = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    if r.returncode and not root:
+        print("note: if it still can't start, its system libraries are missing: "
+              f"sudo npx -y {PLAYWRIGHT} install-deps chromium", flush=True)
+    import glob
+    found = sorted(glob.glob(os.path.join(dest, "chromium_headless_shell-*", "*", "headless_shell"))) + \
+        sorted(glob.glob(os.path.join(dest, "chromium-*", "*", "chrome")))
+    for b in found:
+        if frame_test(b)[0]:
+            os.makedirs(os.path.dirname(BROWSER_FILE), exist_ok=True)
+            with open(BROWSER_FILE, "w") as fh:
+                fh.write(b)
+            return b
+    return None
+
+
+def render_test():
+    """launch the render browser for real: one frame of a one-second composition. READY has to mean it can render"""
+    saved = open(BROWSER_FILE).read().strip() if os.path.exists(BROWSER_FILE) else None
+    good, out = frame_test(saved if saved and os.path.exists(saved) else None)
+    if not good and OS == "linux" and not SANDBOX and not CHECK:
+        b = linux_browser()
+        if b:
+            good, out = True, ""
+            print(f"render browser: {b}", flush=True)
     if good:
         status("render", True, "the render browser launched and drew a frame")
-    elif "MachPortRendezvousServer" in out or "Failed to launch the browser" in out:
+    elif SANDBOX or "MachPortRendezvousServer" in out:
         status("render", False, "BLOCKED: this agent's sandbox stops the render browser from starting", FULL_ACCESS)
     else:
-        status("render", False, "the test frame failed:\n" + out[-1200:], f"cd {d} && {' '.join(HF)} snapshot --at 0.5")
-    if good:
-        shutil.rmtree(d, ignore_errors=True)
+        status("render", False, "the test frame failed:\n" + out[-1200:],
+               f"{' '.join(HF)} browser ensure, or point HYPERFRAMES_BROWSER_PATH at any Chrome or Chromium")
 
 
 def find_python():
@@ -131,10 +175,10 @@ def main():
     if have and "libvpx-vp9" not in version_of(["ffmpeg", "-hide_banner", "-encoders"]):
         print("note: this ffmpeg has no VP9 encoder (libvpx); cutouts behind the speaker need it", flush=True)
 
-    # Node 18+
+    # Node 22+ (HyperFrames refuses older)
     v = version_of(["node", "--version"]) if shutil.which("node") else ""
     m = re.match(r"v(\d+)", v)
-    status("node", bool(m and int(m.group(1)) >= 18), v, FIX["node"][OS])
+    status("node", bool(m and int(m.group(1)) >= 22), v + ("" if m and int(m.group(1)) >= 22 else " (needs 22+)"), FIX["node"][OS])
 
     # the kit's own Python environment
     reqs = os.path.join(KIT, "setup", "requirements.txt")
@@ -173,9 +217,10 @@ def main():
             if r.returncode:
                 print((r.stdout + r.stderr)[-800:], flush=True)
         chrome = run(HF + ["browser", "path"])
-        status("chrome", chrome.returncode == 0 and bool(chrome.stdout.strip()), "found" if chrome.returncode == 0 else "",
-               FULL_ACCESS if SANDBOX else f"{' '.join(HF)} browser ensure")
-        if chrome.returncode == 0 and os.path.exists(GSAP_PATH):
+        found = chrome.returncode == 0 and bool(chrome.stdout.strip())
+        if OS != "linux" or found:                  # on Linux the render step installs a browser that works
+            status("chrome", found, "found" if found else "", FULL_ACCESS if SANDBOX else f"{' '.join(HF)} browser ensure")
+        if os.path.exists(GSAP_PATH) and (found or OS == "linux"):
             render_test()
     else:
         status("hyperfrm", False, "needs Node first", FIX["node"][OS])

@@ -20,11 +20,16 @@ how cards are built, how sound sits under the voice.
 ## What this host can do (check once, adapt, never ask the creator about it)
 - **A terminal and files**: required. The kit runs Python, ffmpeg and Node on the creator's computer. A host
   without one (a chat app with no computer access): say plainly that this skill needs an agent that can run
-  commands on their machine (Claude Code, Codex, or Claude Cowork with code execution on), then stop.
-- **A sandbox** (Codex runs commands in one by default): rendering launches a headless browser, which Codex's
-  macOS sandbox blocks, and setup needs the network. `setup.py` says so when it runs inside one. Ask the creator to
+  commands on their machine (Claude Code, Codex, Claude Cowork with code execution on, or ChatGPT Work in the
+  desktop app), then stop.
+- **A sandbox** (Codex runs commands in one by default, and so does ChatGPT Work, through the Codex built into
+  it): rendering launches a headless browser, which Codex's macOS sandbox blocks, and setup needs the network. `setup.py` says so when it runs inside one. Ask the creator to
   give the session full access (Codex: Full access in the permissions menu, or `codex --sandbox
   danger-full-access`), or to approve the render commands running outside the sandbox.
+- **Granted folders only** (Claude Cowork runs in a Linux VM on the creator's computer; ChatGPT Work works in a
+  folder they open): set `REEL_KIT_HOME` to a folder inside the one they granted (`export
+  REEL_KIT_HOME=<granted folder>/reel-kit` in every command) so the style pack, projects and tools stay on their
+  computer between sessions, and put the finished videos there too. Renders in a VM use its CPU: slower, still fine.
 - **Subagents** (an Agent or Task tool): build cards in parallel. None: build them one after another yourself,
   each from the same brief.
 - **Claude artifacts** (an Artifact tool): publish the storyboard and the style board there and read inline
