@@ -1,0 +1,18 @@
+<!-- look (layer: over, the whole video): the Gospel Talks type and the caption treatment, style only, nothing drawn.
+     Brand formula: wide caps + one italic word. Archivo Expanded Black (this folder) is --font-wide for every
+     headline in caps; Instrument Serif Italic (the pack's caption face, repurposed) is --font-italic for the one
+     italic word. Captions: a Canvas pill, Archivo in Slate; the *word* turns italic in Marine; thesis words are one
+     big italic word in Marine; strikes in Slate. -->
+<style>
+@font-face { font-family:'Archivo Expanded'; src:url('fx/{{ID}}/ArchivoExpanded-900.ttf') format('truetype'); font-weight:900; font-style:normal; font-display:block; }
+:root { --font-wide:'Archivo Expanded', 'Archivo', sans-serif; --font-italic:var(--font-caption); }
+.cap { font-family:var(--font-text); font-weight:600; letter-spacing:-.015em; }
+.cap.onfoot { outline:1.5px solid var(--c-hair-light); outline-offset:-1.5px; }
+.cap .em { font-family:var(--font-italic); font-style:italic; font-weight:400; font-size:1.2em; line-height:.9; letter-spacing:0;
+  color:var(--c-accent); background:none; }
+.cap.onlight .em, .cap.ondark .em { color:var(--c-accent); }
+.cap.thesis, .cap.thesis.onfoot, .cap.thesis.onlight, .cap.thesis.ondark { font-family:var(--font-italic); font-style:italic; font-weight:400;
+  font-size:128px; line-height:1; letter-spacing:-.01em; color:var(--c-accent); padding:4px 34px 14px; }
+.cap.thesis.onfoot { background:var(--c-box); }
+.strk { background:var(--c-neg); }
+</style>

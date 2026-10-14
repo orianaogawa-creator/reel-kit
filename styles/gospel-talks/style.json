@@ -1,0 +1,120 @@
+{
+ "version": 1,
+ "creator": {
+  "name": "Ori",
+  "handle": "",
+  "site": "",
+  "show": "Gospel Talks"
+ },
+ "fonts": {
+  "display": {
+   "family": "Archivo",
+   "italic": false,
+   "weight": 900
+  },
+  "text": {
+   "family": "Archivo",
+   "italic": false,
+   "weight": 600
+  },
+  "mono": {
+   "family": "JetBrains Mono",
+   "italic": false,
+   "weight": 500
+  },
+  "caption": {
+   "family": "Instrument Serif",
+   "italic": true,
+   "weight": 400
+  }
+ },
+ "colors": {
+  "light": "#EFE8D8",
+  "dark": "#555E6D",
+  "ink": "#555E6D",
+  "muted_light": "#555E6D",
+  "muted_dark": "rgba(239,232,216,.72)",
+  "hair_light": "#D9D2C2",
+  "hair_dark": "rgba(239,232,216,.25)",
+  "accent": "#6D7AA4",
+  "accent_on_light": "#6D7AA4",
+  "negative": "#555E6D",
+  "negative_on_light": "#555E6D",
+  "positive": "#8A9E9F",
+  "positive_on_light": "#555E6D",
+  "series": [
+   "#8A9E9F",
+   "#C6D2CE",
+   "#CED8E2"
+  ],
+  "caption_box": "#EFE8D8",
+  "caption_ink": "#555E6D",
+  "caption_dim": "rgba(85,94,109,.5)",
+  "textbox_bg": "#EFE8D8",
+  "textbox_ink": "#555E6D"
+ },
+ "grounds": {
+  "grid": false,
+  "radius": 6
+ },
+ "captions": {
+  "hifi": {
+   "box": true,
+   "uppercase": false,
+   "size": 56,
+   "y": 1236
+  },
+  "lofi": {
+   "box": true,
+   "size": 66,
+   "y": 1318
+  }
+ },
+ "grade": "contrast(1.03)",
+ "motion": "normal",
+ "sound": {
+  "sfx": "normal",
+  "music": "none"
+ },
+ "modes": {
+  "hifi": {
+   "hook": "two-line",
+   "captions": "phrases",
+   "emphasis": [
+    "thesis",
+    "big"
+   ],
+   "behind_head": "sometimes",
+   "cards": "often",
+   "camera": "settle",
+   "bw": false,
+   "j_lead": 0.3
+  },
+  "lofi": {
+   "captions": "phrase",
+   "max_words": 3,
+   "max_chars": 22,
+   "text_boxes": true,
+   "overlays": "sometimes",
+   "backdrops": "often",
+   "zooms": false,
+   "bw": false,
+   "j_lead": 0.3
+  },
+  "showcase": {
+   "emphasis_word": "scale",
+   "transitions": [
+    "push",
+    "reveal",
+    "drop"
+   ],
+   "density": "high",
+   "motif": "",
+   "j_lead": 0.3,
+   "captions": "phrase",
+   "max_words": 3,
+   "max_chars": 22
+  }
+ },
+ "end_card": false
+}

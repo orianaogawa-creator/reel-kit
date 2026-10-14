@@ -1,0 +1,8 @@
+/* Gospel Talks, this video: the wide headline face and the italic emphasis face as tokens (the pack's brand.css
+   has three roles; the brand formula needs two expressive faces). Wide caps + one italic word. */
+@font-face { font-family:'Archivo Expanded'; src:url('fonts/ArchivoExpanded-900.ttf') format('truetype'); font-weight:900; font-style:normal; font-display:block; }
+:root { --font-wide:'Archivo Expanded', 'Archivo', sans-serif; --font-italic:var(--font-caption); }
+.wide   { font-family:var(--font-wide); font-weight:900; text-transform:uppercase; letter-spacing:.01em; line-height:1; white-space:nowrap; }
+.ital   { font-family:var(--font-italic); font-style:italic; font-weight:400; letter-spacing:-.01em; line-height:1; white-space:nowrap; }
+.kicker { letter-spacing:.3em; }
+.ground-light .kicker { color:var(--c-ink); }
