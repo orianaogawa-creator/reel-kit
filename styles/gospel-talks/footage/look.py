@@ -1,56 +1,77 @@
-"""The Gospel Talks footage look: clean and cool-neutral (the yellow pulled out of walls, lamps and wood), and the
-room behind the speaker softly blurred (a shallow depth of field) while she stays sharp. Tuned on the first episode
-(a bright white living room, iPhone HDR tone-mapped to SDR); adjust WB / YELLOW / LIFT for a different room.
-grade(rgb uint8 HxWx3) -> float32 0..1 ; composite_u8(rgb uint8, alpha uint8, sigma) -> uint8"""
+"""The Gospel Talks footage look, matched to Ori's beach photo (bright and airy): whites clean with a touch of cream,
+skin peach rather than orange, mids a little brighter, blues pastel and a touch toward periwinkle, greens sage, blacks
+a clean charcoal; the room behind the speaker softly blurred (a shallow depth of field) while she stays sharp. Tuned on
+the first episode (a bright white living room, iPhone HDR tone-mapped to SDR); for another room adjust MIDS, BANDS
+and CREAM. grade(rgb uint8 HxWx3) -> float32 0..1 ; composite_u8(rgb uint8, alpha uint8, sigma) -> uint8"""
 import numpy as np
 from scipy.ndimage import gaussian_filter
 
-WB = (0.975, 1.0, 1.045)          # R, G, B gains (display space): whites a touch cool, crisp
-YELLOW = (45.0, 22.0, 0.60)       # hue centre (deg), half-width, how much saturation comes out of yellows (walls, lamp)
-ORANGE = (26.0, 14.0, 0.15)       # a little out of oranges (the lamp glow, wood, skin's yellow cast)
-LIFT = 0.93                       # exposure: v ** LIFT (brighter, clean)
-SAT = 0.97                        # overall saturation
+MIDS = 0.26                  # brighter mids: L += MIDS * x^1.5 * (1 - x) * 100   (x = L / 100; blacks and whites stay put)
+SAT = 0.93                   # overall chroma
+CMAX = 50.0                  # strong colours roll off softly: C -> CMAX * tanh(C / CMAX)
+#            hue centre, half-width (deg), chroma scale, hue shift (deg), lightness (+L)
+BANDS = [(48.0, 30.0, 0.90, 0.0, 1.0),      # skin and oranges: peach, not orange; a little brighter
+         (88.0, 18.0, 0.70, 0.0, 0.0),      # yellows (lamp glow, wood)
+         (130.0, 35.0, 0.72, -6.0, 1.5),    # greens toward sage
+         (262.0, 40.0, 1.02, 4.0, 0.5)]     # blues: pastel, a touch toward periwinkle (the window)
+CREAM = 0.72                 # near-whites keep only this much of their warm tint (clean, a touch of cream)
+CHARCOAL = 0.45              # near-blacks keep only this much of their tint (no purple in the black shirt)
+
+_M = np.array([[0.4124564, 0.3575761, 0.1804375], [0.2126729, 0.7151522, 0.0721750], [0.0193339, 0.1191920, 0.9503041]], np.float64)
+_MI = np.linalg.inv(_M)
+_WP = np.array([0.95047, 1.0, 1.08883])
 
 
-def rgb_to_hsv(c):
-    r, g, b = c[..., 0], c[..., 1], c[..., 2]
-    mx, mn = c.max(-1), c.min(-1)
-    d = mx - mn
-    h = np.zeros_like(mx)
-    m = d > 1e-6
-    rr = m & (mx == r); gg = m & (mx == g) & ~rr; bb = m & ~rr & ~gg
-    h[rr] = ((g - b)[rr] / d[rr]) % 6
-    h[gg] = (b - r)[gg] / d[gg] + 2
-    h[bb] = (r - g)[bb] / d[bb] + 4
-    h *= 60.0
-    s = np.where(mx > 1e-6, d / np.maximum(mx, 1e-6), 0)
-    return h, s, mx
+def _to_lab(c):
+    lin = np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+    xyz = lin @ _M.T / _WP
+    f = np.where(xyz > (6 / 29) ** 3, np.cbrt(xyz), xyz / (3 * (6 / 29) ** 2) + 4 / 29)
+    return 116 * f[..., 1] - 16, 500 * (f[..., 0] - f[..., 1]), 200 * (f[..., 1] - f[..., 2])
 
 
-def hsv_to_rgb(h, s, v):
-    h6 = (h / 60.0) % 6
-    i = np.floor(h6).astype(np.int8)
-    f = h6 - i
-    p, q, t = v * (1 - s), v * (1 - s * f), v * (1 - s * (1 - f))
-    out = np.empty(h.shape + (3,), np.float32)
-    for k, (a, b, c) in enumerate([(v, t, p), (q, v, p), (p, v, t), (p, q, v), (t, p, v), (v, p, q)]):
-        m = i == k
-        out[..., 0][m], out[..., 1][m], out[..., 2][m] = a[m], b[m], c[m]
-    return out
+def _from_lab(L, a, b):
+    fy = (L + 16) / 116
+    f = np.stack([fy + a / 500, fy, fy - b / 200], -1)
+    xyz = np.where(f > 6 / 29, f ** 3, 3 * (6 / 29) ** 2 * (f - 4 / 29)) * _WP
+    lin = np.clip(xyz @ _MI.T, 0, None)
+    return np.where(lin <= 0.0031308, lin * 12.92, 1.055 * lin ** (1 / 2.4) - 0.055)
 
 
-def bump(h, centre, width):
+def _smooth(x, e0, e1):
+    t = np.clip((x - e0) / (e1 - e0), 0, 1)
+    return t * t * (3 - 2 * t)
+
+
+def _band(h, centre, width):
     d = np.abs(((h - centre + 180) % 360) - 180)
-    return np.clip(1 - d / width, 0, 1) ** 1.5
+    return 0.5 + 0.5 * np.cos(np.pi * np.clip(d / width, 0, 1))      # raised cosine: 1 at the centre, 0 at the edge
 
 
 def grade(rgb):
-    c = rgb.astype(np.float32) / 255.0
-    c = np.clip(c * np.array(WB, np.float32), 0, 1)
-    h, s, v = rgb_to_hsv(c)
-    s = s * SAT * (1 - YELLOW[2] * bump(h, YELLOW[0], YELLOW[1])) * (1 - ORANGE[2] * bump(h, ORANGE[0], ORANGE[1]))
-    v = v ** LIFT
-    return np.clip(hsv_to_rgb(h, s, v), 0, 1)
+    c = rgb.astype(np.float64) / 255.0
+    L, a, b = _to_lab(c)
+    C = np.hypot(a, b)
+    h = np.degrees(np.arctan2(b, a)) % 360
+    colour = _smooth(C, 3.0, 14.0)                  # hue moves only act on real colour, never on near-greys
+    scale = np.full_like(C, SAT)
+    dh = np.zeros_like(C)
+    dL = np.zeros_like(C)
+    for centre, width, s, shift, lift in BANDS:
+        w = _band(h, centre, width) * colour
+        scale *= 1 + (s - 1) * w
+        dh += shift * w
+        dL += lift * w * _smooth(L, 15, 45) * (1 - _smooth(L, 85, 98))
+    # near-whites: a touch of cream, no yellow; near-blacks: clean charcoal
+    warm = _band(h, 70.0, 60.0)
+    low_c = 1 - _smooth(C, 8.0, 20.0)
+    scale *= 1 + (CREAM - 1) * warm * low_c * _smooth(L, 70, 90)
+    scale *= 1 + (CHARCOAL - 1) * low_c * (1 - _smooth(L, 20, 42))
+    C2 = CMAX * np.tanh(C / CMAX) * scale
+    h2 = np.radians(h + dh)
+    x = L / 100.0
+    L2 = L + MIDS * 100 * np.power(np.clip(x, 0, 1), 1.5) * (1 - x) + dL
+    out = _from_lab(np.clip(L2, 0, 100), C2 * np.cos(h2), C2 * np.sin(h2))
+    return np.clip(out, 0, 1).astype(np.float32)
 
 
 def composite(fg, alpha, bg, sigma=7.0):

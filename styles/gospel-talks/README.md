@@ -10,7 +10,7 @@ wide caps + one italic word. First used on the episode "Let the Word Diagnose Yo
 | `brand-extra.css` | the two expressive faces as tokens for cards: `--font-wide`, `--font-italic`, `.wide`, `.ital` |
 | `caption-look.html` | an effect (layer `over`) that loads Archivo Expanded in the composition and styles the captions |
 | `fetch_wide_font.py` | downloads Archivo Expanded Black from Google Fonts (the one face `style.py` can't fetch) |
-| `footage/` | the footage look: a clean cool-neutral grade and a softly blurred background behind the speaker |
+| `footage/` | the footage look: a bright, airy grade (matched to Ori's beach photo) and a softly blurred background behind the speaker |
 
 ## Fonts and colours
 - Headlines: Archivo Expanded Black, caps. Emphasis word: Instrument Serif Italic. Labels: JetBrains Mono, caps,
@@ -44,5 +44,5 @@ wide caps + one italic word. First used on the episode "Let the Word Diagnose Yo
    ```
    It writes `public/clean.mp4` (graded, background blurred, the speaker sharp) and `public/subject.webm` (the graded
    speaker for the cutout windows); the originals stay in `assets/`. The last number is the blur strength (7 is
-   "a little blur"). The grade was tuned for a bright white room; adjust `WB`, `YELLOW` and `LIFT` in `look.py` for
+   "a little blur"). The grade was tuned for a bright white room; adjust `MIDS`, `BANDS` and `CREAM` in `look.py` for
    another room, then rebuild the cube.

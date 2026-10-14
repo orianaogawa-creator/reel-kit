@@ -1,5 +1,5 @@
-"""The footage look for this video, applied after the cutout: the clean cool-neutral grade (work/look.cube, from
-work/look.py) on every frame, and the room behind the speaker softly blurred while she stays sharp (her alpha from
+"""The footage look for this video, applied after the cutout: the airy grade (work/look.cube, from work/look.py)
+on every frame, and the room behind the speaker softly blurred while she stays sharp (her alpha from
 the kit's cutout, assets/subject.webm). Writes, frame for frame with the cut:
   public/clean.mp4     graded, background blurred, subject sharp (the composition's footage)
   public/subject.webm  the graded speaker with her alpha (the cutout windows put her over the type behind her head)

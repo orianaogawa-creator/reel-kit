@@ -21,8 +21,9 @@ one small label.
   Instrument Serif Italic beside "Talks" in Archivo ExtraBold, BY ORI under it.
 
 ## Footage
-Clean and cool-neutral (whites read white, no yellow cast), the room softly blurred behind Ori (a shallow depth of
-field) while she stays sharp. Type behind the head is Slate and Marine on the bright wall, never on a coloured ground.
+Bright and airy, matched to Ori's beach photo: whites clean with a touch of cream (never yellow), skin peach rather
+than orange, mids a little brighter, blues pastel, greens sage, blacks a clean charcoal. The room softly blurred
+behind Ori (a shallow depth of field) while she stays sharp. Type behind the head is Slate and Marine on the bright wall, never on a coloured ground.
 
 ## Hi-fi
 Wall type above the head in the formula (wide caps line, then the italic word). Captions in a Canvas pill, Archivo
